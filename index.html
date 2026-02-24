@@ -3,151 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>心のデトックス & 猫の説教</title>
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>猫と秘密の避難所</title>
     <style>
-        :root {
-            --bg: #1a1a1f;
-            --surface: #222228;
-            --accent: #ff7eb6;
-            --text: #f0f0f8;
-            --cat-color: #ffcc80;
-        }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Zen Kaku Gothic New', sans-serif; }
-        body { background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; padding:20px; overflow-x:hidden; }
-        
-        /* 猫の表示エリア */
-        .cat-area { text-align:center; padding:20px; min-height:150px; }
-        .cat-emoji { font-size:60px; display:block; margin-bottom:10px; transition: 0.3s; }
-        .cat-bubble { background:var(--surface); padding:15px; border-radius:15px; border:2px solid var(--accent); position:relative; font-size:14px; line-height:1.6; }
+        :root { --bg: #0f1115; --card: #1a1d23; --text: #d1d5db; --sub: #9ca3af; --accent: #3b82f6; --btn-bg: #2d333b; }
+        [data-theme="light"] { --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --sub: #64748b; --accent: #10b981; --btn-bg: #e2e8f0; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; transition: 0.3s; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 15px; overflow-x: hidden; }
+
+        /* 🐈 自由に動く猫エリア */
+        #cat-field { position: relative; height: 160px; width: 100%; overflow: hidden; margin-bottom: 10px; cursor: pointer; }
+        #walking-cat { position: absolute; bottom: 10px; left: 0; font-size: 50px; transition: left 2s linear, transform 0.2s; user-select: none; }
+
+        .bubble { background: var(--card); padding: 12px; border-radius: 15px; font-size: 13px; margin-bottom: 20px; border: 1px solid var(--btn-bg); min-height: 50px; position: relative; }
         
         /* 入力エリア */
-        .input-area { flex:1; display:flex; flex-direction:column; gap:10px; margin-top:20px; }
-        textarea { width:100%; flex:1; background:var(--surface); border:1px solid #444; border-radius:15px; padding:15px; color:var(--text); font-size:16px; resize:none; outline:none; }
-        textarea:focus { border-color:var(--accent); }
+        .input-box { background: var(--card); padding: 15px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        textarea { width: 100%; height: 80px; background: var(--bg); border: 1px solid var(--btn-bg); border-radius: 10px; color: var(--text); padding: 10px; font-size: 15px; resize: none; overflow-y: auto; outline: none; }
+        
+        .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .btn { padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; background: var(--btn-bg); color: var(--text); font-size: 13px; }
+        .btn-active { background: var(--accent); color: white; }
 
-        /* ボタン */
-        .btn-group { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px; }
-        .btn { padding:15px; border-radius:12px; border:none; font-weight:900; cursor:pointer; font-size:14px; transition:0.2s; }
-        .btn:active { transform:scale(0.95); }
-        .btn-angry { background:#ff4757; color:white; } /* 説教 */
-        .btn-praise { background:#2ed573; color:white; } /* 褒める */
-        .btn-clear { background:#555; color:white; margin-top:10px; font-size:12px; }
+        /* 履歴 */
+        .history { margin-top: 20px; max-height: 250px; overflow-y: auto; padding-right: 5px; }
+        .hist-item { background: var(--card); padding: 10px; border-radius: 8px; margin-bottom: 6px; font-size: 12px; border-left: 4px solid var(--accent); }
+        .hist-time { font-size: 10px; color: var(--sub); display: block; }
 
-        /* 22時以降の警告 */
-        #night-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; }
-        #night-overlay .cat-emoji { font-size:100px; }
+        /* 夜更かし警告 */
+        #night-msg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: white; }
+
+        .theme-toggle { position: absolute; top: 15px; right: 15px; font-size: 20px; cursor: pointer; opacity: 0.6; }
     </style>
 </head>
-<body>
+<body data-theme="dark">
 
-    <div class="cat-area">
-        <span id="cat-icon" class="cat-emoji">🐱</span>
-        <div id="cat-msg" class="cat-bubble">
-            ここはあなただけの場所だよ。誰にも言えないこと、全部吐き出しちゃいな。
+    <div class="theme-toggle" onclick="toggleTheme()">🌓</div>
+
+    <div id="cat-field" onclick="catAction()">
+        <div id="walking-cat">🐈</div>
+    </div>
+
+    <div class="bubble" id="cat-say">
+        なんなの？なんかあったなら言いなよ。聞いてあげなくもないけど。
+    </div>
+
+    <div class="input-box">
+        <textarea id="main-input" placeholder="ここになぐり書きして..."></textarea>
+        <div class="btns">
+            <button class="btn btn-active" onclick="talk('angry')">喝を入れて💢</button>
+            <button class="btn btn-active" onclick="talk('praise')">褒めて✨</button>
+            <button class="btn" onclick="talk('none')">ただの独り言</button>
+            <button class="btn" onclick="clearInput()">全消去🗑️</button>
         </div>
     </div>
 
-    <div class="input-area">
-        <textarea id="memo" placeholder="今のぐちゃぐちゃな気持ちを書いてね..."></textarea>
-        
-        <div class="btn-group">
-            <button class="btn btn-angry" onclick="process('angry')">喝を入れて！💢</button>
-            <button class="btn btn-praise" onclick="process('praise')">全力で褒めて！✨</button>
-        </div>
-        <button class="btn btn-clear" onclick="clearAll()">シュレッダー（全消去）</button>
-    </div>
+    <div class="history" id="hist-cont"></div>
 
-    <div id="night-overlay">
-        <span class="cat-emoji">😾</span>
-        <h2 id="night-title" style="color:#ff4757; margin-bottom:10px;"></h2>
-        <p id="night-msg" style="margin-bottom:20px;"></p>
-        <button class="btn btn-praise" onclick="closeNight()">わかった、すぐ寝る準備する</button>
+    <div id="night-msg">
+        <div style="font-size: 80px;">😾</div>
+        <h2 id="night-h">寝ろって言ってんだろ</h2>
+        <p id="night-p" style="margin: 15px 0; color: #9ca3af;"></p>
+        <button class="btn btn-active" onclick="document.getElementById('night-msg').style.display='none'">すいません寝ます...</button>
     </div>
 
 <script>
-    const msgs = {
-        angry: [
-            "甘ったれんじゃないわよ！そんなことで立ち止まってていいの？",
-            "あんたの人生でしょ！もっと自分を大事にしなさいよ！",
-            "メソメソしてても何も変わらないわよ。とりあえず深呼吸しなさい！",
-            "いつまで同じことで悩んでるの。一回全部忘れて寝なさい！",
-            "そんな男（女・こと）のために時間使うの、もったいないと思わないわけ？！"
-        ],
-        praise: [
-            "えっ、すごすぎる…！今日一日生きてただけで大天才だよ！✨",
-            "見てたよ。あんたがどれだけ頑張ってたか、私だけは知ってるからね。",
-            "頑張ったね。本当にえらい。今日はもう自分を甘やかしていいんだよ。",
-            "あんたは最高だよ。世界で一番価値があるんだから、自信持って！",
-            "そんなに頑張っちゃって…よしよし、撫でてあげる。大好きだよ！"
-        ]
+    const cats = ['🐈', '🐈‍⬛', '🐅', '🐱'];
+    const catEl = document.getElementById('walking-cat');
+    let theme = 'dark';
+
+    // 猫のトコトコ移動
+    function moveCat() {
+        const x = Math.random() * (window.innerWidth - 60);
+        catEl.style.left = x + 'px';
+        catEl.style.transform = Math.random() > 0.5 ? 'scaleX(1)' : 'scaleX(-1)';
+        catEl.innerText = cats[Math.floor(Math.random() * cats.length)];
+    }
+    setInterval(moveCat, 3000);
+
+    function catAction() {
+        const actions = ['🐾', '💤', '👅', '✨'];
+        const original = catEl.innerText;
+        catEl.innerText = actions[Math.floor(Math.random() * actions.length)];
+        setTimeout(() => catEl.innerText = original, 1000);
+    }
+
+    const res = {
+        angry: ["いつまで同じことでウジウジしてんの。時間の無駄。","あんたがそんなんだからナメられんのよ。","反省すんなら寝てからにしなさいよ。","はいはい、悲劇のヒロイン乙。で、明日は何すんの？"],
+        praise: ["まあ、あんたなりによくやったんじゃない？","生きてるだけで100点とか、甘いこと言わないわよ。でも今日は120点。","あんたの努力、私だけは見てたから。お疲れ様。","たまには自分を甘やかしてもバチ当たらないわよ。"],
+        none: ["ふーん。","聞いてるよ。","勝手に話しな。"]
     };
 
-    // 処理実行
-    function process(type) {
-        const text = document.getElementById('memo').value;
-        const msgBox = document.getElementById('cat-msg');
-        const catIcon = document.getElementById('cat-icon');
+    function talk(type) {
+        const input = document.getElementById('main-input');
+        const say = document.getElementById('cat-say');
+        if(!input.value && type !== 'none') return;
 
-        if (!text) {
-            msgBox.innerText = "まずは何か書かないと、何も言えないよ。";
-            return;
+        // 履歴保存
+        if(input.value) {
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const item = document.createElement('div');
+            item.className = 'hist-item';
+            item.innerHTML = `<span class="hist-time">${time}</span>${input.value}`;
+            document.getElementById('hist-cont').prepend(item);
         }
 
-        // 演出：一旦文字を消す（宇宙に飛ばすイメージ）
-        document.getElementById('memo').value = "";
-        
-        // ランダム返信
-        const list = msgs[type];
-        const result = list[Math.floor(Math.random() * list.length)];
-        
-        catIcon.style.transform = "scale(1.3) rotate(10deg)";
-        setTimeout(() => catIcon.style.transform = "scale(1)", 200);
-
-        msgBox.innerHTML = `<strong>【${type === 'angry' ? '説教モード' : '褒め褒めモード'}】</strong><br>${result}`;
-        
-        if (type === 'angry') catIcon.innerText = "😾";
-        else catIcon.innerText = "😻";
+        const msg = type === 'none' ? "あ、そう。" : res[type][Math.floor(Math.random() * res[type].length)];
+        say.innerText = msg;
+        input.value = "";
     }
 
-    function clearAll() {
-        if(confirm("全部消してスッキリする？")) {
-            document.getElementById('memo').value = "";
-            document.getElementById('cat-msg').innerText = "全部消したよ。心も軽くなったかな？";
-            document.getElementById('cat-icon').innerText = "🐱";
-        }
+    function clearInput() { document.getElementById('main-input').value = ""; }
+
+    function toggleTheme() {
+        theme = theme === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', theme);
     }
 
-    // 夜更かしチェック
     function checkNight() {
-        const now = new Date();
-        const hour = now.getHours();
-        const overlay = document.getElementById('night-overlay');
-
-        // 22時〜翌朝5時の間
+        const hour = new Date().getHours();
         if (hour >= 22 || hour < 5) {
-            const diff = hour >= 22 ? hour - 22 : hour + 2; // 22時からの経過時間
-            overlay.style.display = 'flex';
-            
-            document.getElementById('night-title').innerText = `現在 ${hour}時！`;
-            
-            let message = "";
-            if (diff === 0) message = "まだ22時だけど、今のうちにスマホ置かないと明日辛いよ？";
-            else if (diff === 1) message = "もう23時！猫はもう眠いんだけど。あんたも寝る準備しなさい！";
-            else if (diff >= 2) message = `${diff}時間も夜更かししてるじゃない！いつまで起きてるの！美容にも悪いわよ！💢`;
-            
-            document.getElementById('night-msg').innerText = message;
-        } else {
-            overlay.style.display = 'none';
+            document.getElementById('night-msg').style.display = 'flex';
+            const diff = hour >= 22 ? hour - 22 : hour + 2;
+            document.getElementById('night-p').innerText = hour + "時だよ。いつまで起きてんの。もう" + diff + "時間も夜更かししてる。";
         }
     }
-
-    function closeNight() {
-        document.getElementById('night-overlay').style.display = 'none';
-    }
-
-    // 1分ごとに時間をチェック
-    setInterval(checkNight, 60000);
     checkNight();
 </script>
 </body>
