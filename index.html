@@ -3,121 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>くすり管理 Pro</title>
+    <title>心のデトックス & 猫の説教</title>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --bg:#fdf6f9;--surface:#fff;--accent:#e8a0bf;--accent-dark:#c9729a;--text:#3a2a35;--text-sub:#8a6878;--border:rgba(0,0,0,0.1);--morning:#f5a84d;--noon:#5ab2ff;--night:#7d6fb0; }
-        [data-theme="dark"] { --bg:#111113;--surface:#1a1a1f;--accent:#7eb6ff;--accent-dark:#5cabff;--text:#f0f0f8;--text-sub:#9090b0; }
-        [data-theme="charcoal"] { --bg:#181818;--surface:#222;--accent:#e0b97a;--accent-dark:#c89846;--text:#f0ebe0;--text-sub:#a09070; }
+        :root {
+            --bg: #1a1a1f;
+            --surface: #222228;
+            --accent: #ff7eb6;
+            --text: #f0f0f8;
+            --cat-color: #ffcc80;
+        }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Zen Kaku Gothic New', sans-serif; }
-        body { background:var(--bg); color:var(--text); padding-bottom:80px; transition:0.3s; }
-        #lock-screen { position:fixed; inset:0; background:var(--bg); z-index:9999; display:none; flex-direction:column; align-items:center; justify-content:center; }
-        .header { position:sticky; top:0; z-index:100; background:var(--surface); padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); }
-        .tabs { display:flex; gap:5px; padding:10px; background:var(--surface); position:sticky; top:60px; z-index:90; }
-        .tab { flex:1; padding:10px; border-radius:10px; border:1px solid var(--border); font-size:12px; font-weight:700; background:none; color:var(--text-sub); }
-        .tab.active { background:var(--accent); color:#fff; border:none; }
-        .section { padding:15px; }
-        .time-badge { display:inline-block; padding:4px 10px; border-radius:15px; font-size:12px; font-weight:700; margin:10px 0; }
-        .morning { background:#fff3e0; color:var(--morning); } .noon { background:#e1f5fe; color:var(--noon); } .night { background:#ede7f6; color:var(--night); }
-        .med-card { background:var(--surface); border-radius:15px; padding:15px; display:flex; align-items:center; gap:12px; margin-bottom:10px; border:1px solid var(--border); }
-        .med-card.checked { border-color:var(--accent); opacity:0.6; }
-        .pill-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:10px; }
-        .pill-cell { aspect-ratio:1; border-radius:50%; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:10px; }
-        .pill-cell.taken { background:var(--accent); color:#fff; }
-        .pill-cell.today { border:2px solid var(--accent); }
-        .fab { position:fixed; bottom:20px; right:20px; width:56px; height:56px; border-radius:50%; background:var(--accent-dark); color:#fff; font-size:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); }
-        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:1000; }
-        .modal { background:var(--surface); padding:20px; border-radius:20px; width:90%; max-width:400px; }
-        .form-input { width:100%; padding:10px; margin:10px 0; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); }
-        .btn { padding:10px; border-radius:8px; border:none; font-weight:700; width:100%; margin-top:10px; cursor:pointer; }
+        body { background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; padding:20px; overflow-x:hidden; }
+        
+        /* 猫の表示エリア */
+        .cat-area { text-align:center; padding:20px; min-height:150px; }
+        .cat-emoji { font-size:60px; display:block; margin-bottom:10px; transition: 0.3s; }
+        .cat-bubble { background:var(--surface); padding:15px; border-radius:15px; border:2px solid var(--accent); position:relative; font-size:14px; line-height:1.6; }
+        
+        /* 入力エリア */
+        .input-area { flex:1; display:flex; flex-direction:column; gap:10px; margin-top:20px; }
+        textarea { width:100%; flex:1; background:var(--surface); border:1px solid #444; border-radius:15px; padding:15px; color:var(--text); font-size:16px; resize:none; outline:none; }
+        textarea:focus { border-color:var(--accent); }
+
+        /* ボタン */
+        .btn-group { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px; }
+        .btn { padding:15px; border-radius:12px; border:none; font-weight:900; cursor:pointer; font-size:14px; transition:0.2s; }
+        .btn:active { transform:scale(0.95); }
+        .btn-angry { background:#ff4757; color:white; } /* 説教 */
+        .btn-praise { background:#2ed573; color:white; } /* 褒める */
+        .btn-clear { background:#555; color:white; margin-top:10px; font-size:12px; }
+
+        /* 22時以降の警告 */
+        #night-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; }
+        #night-overlay .cat-emoji { font-size:100px; }
     </style>
 </head>
-<body data-theme="dark">
-    <div id="lock-screen">
-        <h3>🔒 Security</h3>
-        <input type="password" id="pass-input" class="form-input" style="width:200px; text-align:center">
-        <button class="btn" style="background:var(--accent);color:#fff" onclick="checkPass()">解除</button>
-    </div>
-    <div id="app-content" style="display:none">
-        <div class="header">
-            <div><b id="displayDate"></b></div>
-            <input type="date" id="date-picker" onchange="changeDate(this.value)" style="font-size:12px">
-        </div>
-        <div class="tabs">
-            <button class="tab active" onclick="showPage('today',this)">今日</button>
-            <button class="tab" onclick="showPage('pill',this)">ピル</button>
-            <button class="tab" onclick="showPage('settings',this)">設定</button>
-        </div>
-        <div id="page-today" class="page section"></div>
-        <div id="page-pill" class="page section" style="display:none"></div>
-        <div id="page-settings" class="page section" style="display:none">
-            <label>パスワード設定</label><input type="text" id="set-pass" class="form-input" onchange="updateSet()">
-            <label>ピル開始日</label><input type="date" id="pill-start" class="form-input" onchange="updateSet()">
-            <label>テーマ</label><select id="theme-sel" class="form-input" onchange="updateSet()"><option value="dark">ダーク</option><option value="charcoal">チャコール</option><option value="pink">ピンク</option></select>
-            <div id="manage-list"></div>
-        </div>
-        <button class="fab" onclick="openModal()">＋</button>
-    </div>
-    <div class="modal-overlay" id="modal">
-        <div class="modal">
-            <h3 id="mt">薬の登録</h3>
-            <input type="hidden" id="eid">
-            <input type="text" id="mn" class="form-input" placeholder="名前">
-            <input type="text" id="mi" class="form-input" placeholder="絵文字 💊">
-            <select id="mtm" class="form-input"><option value="morning">朝</option><option value="noon">昼</option><option value="night">夜</option></select>
-            <button class="btn" style="background:var(--accent);color:#fff" onclick="saveMed()">保存</button>
-            <button id="db" class="btn" style="background:#ff4757;color:#fff;display:none" onclick="delMed()">削除</button>
-            <button class="btn" onclick="closeModal()">キャンセル</button>
+<body>
+
+    <div class="cat-area">
+        <span id="cat-icon" class="cat-emoji">🐱</span>
+        <div id="cat-msg" class="cat-bubble">
+            ここはあなただけの場所だよ。誰にも言えないこと、全部吐き出しちゃいな。
         </div>
     </div>
-    <script>
-        let s = JSON.parse(localStorage.getItem('med_v3')) || { pw:"", auth:0, thm:"dark", start:new Date().toISOString().split('T')[0], meds:[], hist:{} };
-        let cur = new Date().toISOString().split('T')[0];
-        function save(){ localStorage.setItem('med_v3', JSON.stringify(s)); }
-        function init(){
-            document.body.setAttribute('data-theme', s.thm);
-            document.getElementById('displayDate').innerText = cur;
-            if(s.pw && (Date.now() - s.auth > 604800000)) document.getElementById('lock-screen').style.display='flex';
-            else document.getElementById('app-content').style.display='block';
-            render();
+
+    <div class="input-area">
+        <textarea id="memo" placeholder="今のぐちゃぐちゃな気持ちを書いてね..."></textarea>
+        
+        <div class="btn-group">
+            <button class="btn btn-angry" onclick="process('angry')">喝を入れて！💢</button>
+            <button class="btn btn-praise" onclick="process('praise')">全力で褒めて！✨</button>
+        </div>
+        <button class="btn btn-clear" onclick="clearAll()">シュレッダー（全消去）</button>
+    </div>
+
+    <div id="night-overlay">
+        <span class="cat-emoji">😾</span>
+        <h2 id="night-title" style="color:#ff4757; margin-bottom:10px;"></h2>
+        <p id="night-msg" style="margin-bottom:20px;"></p>
+        <button class="btn btn-praise" onclick="closeNight()">わかった、すぐ寝る準備する</button>
+    </div>
+
+<script>
+    const msgs = {
+        angry: [
+            "甘ったれんじゃないわよ！そんなことで立ち止まってていいの？",
+            "あんたの人生でしょ！もっと自分を大事にしなさいよ！",
+            "メソメソしてても何も変わらないわよ。とりあえず深呼吸しなさい！",
+            "いつまで同じことで悩んでるの。一回全部忘れて寝なさい！",
+            "そんな男（女・こと）のために時間使うの、もったいないと思わないわけ？！"
+        ],
+        praise: [
+            "えっ、すごすぎる…！今日一日生きてただけで大天才だよ！✨",
+            "見てたよ。あんたがどれだけ頑張ってたか、私だけは知ってるからね。",
+            "頑張ったね。本当にえらい。今日はもう自分を甘やかしていいんだよ。",
+            "あんたは最高だよ。世界で一番価値があるんだから、自信持って！",
+            "そんなに頑張っちゃって…よしよし、撫でてあげる。大好きだよ！"
+        ]
+    };
+
+    // 処理実行
+    function process(type) {
+        const text = document.getElementById('memo').value;
+        const msgBox = document.getElementById('cat-msg');
+        const catIcon = document.getElementById('cat-icon');
+
+        if (!text) {
+            msgBox.innerText = "まずは何か書かないと、何も言えないよ。";
+            return;
         }
-        function checkPass(){ if(document.getElementById('pass-input').value===s.pw){ s.auth=Date.now(); save(); location.reload(); } }
-        function showPage(p,e){ document.querySelectorAll('.page').forEach(x=>x.style.display='none'); document.getElementById('page-'+p).style.display='block'; document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); e.classList.add('active'); }
-        function changeDate(v){ cur=v; document.getElementById('displayDate').innerText=cur; render(); }
-        function render(){
-            const t = document.getElementById('page-today'); t.innerHTML = '';
-            ['morning','noon','night'].forEach(tm=>{
-                const ms = s.meds.filter(m=>m.time===tm);
-                if(ms.length){
-                    t.innerHTML += `<div class="time-badge ${tm}">${tm==='morning'?'☀️朝':tm==='noon'?'☁️昼':'🌙夜'}</div>`;
-                    ms.forEach(m=>{
-                        const ck = s.hist[cur]?.includes(m.id);
-                        t.innerHTML += `<div class="med-card ${ck?'checked':''}" onclick="tk('${m.id}')"><span>${m.icon}</span><div style="flex:1"><b>${m.name}</b></div><div>${ck?'✓':''}</div></div>`;
-                    });
-                }
-            });
-            const p = document.getElementById('page-pill'); 
-            const diff = Math.floor((new Date(cur)-new Date(s.start))/(86400000))%28;
-            p.innerHTML = `<h3>ピルシート ${diff<0?diff+29:diff+1}日目</h3><div class="pill-grid">` + Array.from({length:28},(_,i)=>{
-                const d = new Date(s.start); d.setDate(d.getDate()+i); const ds = d.toISOString().split('T')[0];
-                const tk = s.hist[ds]?.some(id=>s.meds.find(m=>m.id===id)?.name.includes('ピル'));
-                return `<div class="pill-cell ${tk?'taken':''} ${i===(diff<0?diff+28:diff)?'today':''}">${i+1}</div>`;
-            }).join('') + `</div>`;
-            const sl = document.getElementById('manage-list'); sl.innerHTML='<br><h4>登録済み</h4>';
-            s.meds.forEach(m=> sl.innerHTML += `<div class="med-card" onclick="openModal('${m.id}')">${m.icon} ${m.name} (編集)</div>`);
+
+        // 演出：一旦文字を消す（宇宙に飛ばすイメージ）
+        document.getElementById('memo').value = "";
+        
+        // ランダム返信
+        const list = msgs[type];
+        const result = list[Math.floor(Math.random() * list.length)];
+        
+        catIcon.style.transform = "scale(1.3) rotate(10deg)";
+        setTimeout(() => catIcon.style.transform = "scale(1)", 200);
+
+        msgBox.innerHTML = `<strong>【${type === 'angry' ? '説教モード' : '褒め褒めモード'}】</strong><br>${result}`;
+        
+        if (type === 'angry') catIcon.innerText = "😾";
+        else catIcon.innerText = "😻";
+    }
+
+    function clearAll() {
+        if(confirm("全部消してスッキリする？")) {
+            document.getElementById('memo').value = "";
+            document.getElementById('cat-msg').innerText = "全部消したよ。心も軽くなったかな？";
+            document.getElementById('cat-icon').innerText = "🐱";
         }
-        function tk(id){ if(!s.hist[cur])s.hist[cur]=[]; const i=s.hist[cur].indexOf(id); if(i>-1)s.hist[cur].splice(i,1); else s.hist[cur].push(id); save(); render(); }
-        function openModal(id){ document.getElementById('modal').style.display='flex'; if(id){ const m=s.meds.find(x=>x.id===id); document.getElementById('eid').value=m.id; document.getElementById('mn').value=m.name; document.getElementById('mi').value=m.icon; document.getElementById('mtm').value=m.time; document.getElementById('db').style.display='block'; }else{ document.getElementById('eid').value=''; document.getElementById('mn').value=''; document.getElementById('db').style.display='none'; } }
-        function closeModal(){ document.getElementById('modal').style.display='none'; }
-        function saveMed(){
-            const id=document.getElementById('eid').value || Date.now().toString();
-            const m={ id, name:document.getElementById('mn').value, icon:document.getElementById('mi').value||'💊', time:document.getElementById('mtm').value };
-            const i=s.meds.findIndex(x=>x.id===id); if(i>-1)s.meds[i]=m; else s.meds.push(m);
-            save(); closeModal(); render();
+    }
+
+    // 夜更かしチェック
+    function checkNight() {
+        const now = new Date();
+        const hour = now.getHours();
+        const overlay = document.getElementById('night-overlay');
+
+        // 22時〜翌朝5時の間
+        if (hour >= 22 || hour < 5) {
+            const diff = hour >= 22 ? hour - 22 : hour + 2; // 22時からの経過時間
+            overlay.style.display = 'flex';
+            
+            document.getElementById('night-title').innerText = `現在 ${hour}時！`;
+            
+            let message = "";
+            if (diff === 0) message = "まだ22時だけど、今のうちにスマホ置かないと明日辛いよ？";
+            else if (diff === 1) message = "もう23時！猫はもう眠いんだけど。あんたも寝る準備しなさい！";
+            else if (diff >= 2) message = `${diff}時間も夜更かししてるじゃない！いつまで起きてるの！美容にも悪いわよ！💢`;
+            
+            document.getElementById('night-msg').innerText = message;
+        } else {
+            overlay.style.display = 'none';
         }
-        function delMed(){ s.meds=s.meds.filter(x=>x.id!==document.getElementById('eid').value); save(); closeModal(); render(); }
-        function updateSet(){ s.pw=document.getElementById('set-pass').value; s.start=document.getElementById('pill-start').value; s.thm=document.getElementById('theme-sel').value; save(); document.body.setAttribute('data-theme', s.thm); }
-        init();
-    </script>
+    }
+
+    function closeNight() {
+        document.getElementById('night-overlay').style.display = 'none';
+    }
+
+    // 1分ごとに時間をチェック
+    setInterval(checkNight, 60000);
+    checkNight();
+</script>
 </body>
 </html>
